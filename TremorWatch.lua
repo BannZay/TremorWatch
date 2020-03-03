@@ -1,6 +1,32 @@
+local Keys = 
+{
+	ShowPulses = "showPulses",
+	Size = "size",
+	Alpha = "alpha",
+	Delay = "Delay",
+	TestMode = "testMode"
+}
+
 TremorWatchMainFrame = CreateFrame("Frame", "TremorWatchMainFrame",UIParent)
 TremorWatchMainFrame.cooldown = CreateFrame("Cooldown", nil, TremorWatchMainFrame, "CooldownFrameTemplate")
-TremorWatchSettings = TremorWatchSettings or { Location = {Point = "Top", RelativeTo = nil, RelativePoint = "Top", XOfs = 0, YOfs = 0}, Size = 40, Delay = 0.4}
+TremorWatchSettings = TremorWatchSettings or { Location = {Point = "Top", RelativeTo = nil, RelativePoint = "Top", XOfs = 0, YOfs = 0}, 
+DB = 
+{
+	[Keys.ShowPulses]=true,
+	[Keys.Size]=130,
+	[Keys.Alpha]=0.8,
+	[Keys.Delay]=0
+}
+}
+
+local random = math.random
+local function uuid()
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(0, 0xf) or random(8, 0xb)
+        return string.format('%x', v)
+    end)
+end
 
 local function _wait(delay, func, ...)
 	if(type(delay)~="number" or type(func)~="function") then
@@ -37,31 +63,64 @@ local function _wait(delay, func, ...)
 	end
 end
 
+local function SetVisibility(target, value)
+	if target ~= nil then
+		if value then 
+			target:Show()
+		else
+			target:Hide()
+		end
+	end
+end
+
 local function ScheduleResetCooldown(guid)
-	if (TremorWatchMainFrame.GUID == guid or guid == -1 and not TremorWatchMainFrame:IsLocked()) then
-		TremorWatchMainFrame.cooldown:SetCooldown(GetTime() - TremorWatchSettings.Delay, 3)
+	if TremorWatchMainFrame.GUID == guid then
+		TremorWatchMainFrame.cooldown:SetCooldown(GetTime() - TremorWatchSettings.DB[Keys.Delay], 3)
 		_wait(3, ScheduleResetCooldown, guid)
 	end
 end
 
+function TremorWatchMainFrame:OnSettingsUpdated(key)
+	TremorWatchMainFrame:SetLocked(not TremorWatchSettings.DB[Keys.TestMode])
+	TremorWatchMainFrame:SetSize(TremorWatchSettings.DB[Keys.Size], TremorWatchSettings.DB[Keys.Size])
+	TremorWatchMainFrame:SetAlpha(TremorWatchSettings.DB[Keys.Alpha])
+	
+	if not TremorWatchSettings.DB[Keys.ShowPulses] then
+		TremorWatchMainFrame.GUID = -1
+		TremorWatchMainFrame.cooldown:SetCooldown(0,0)
+	elseif key == Keys.Delay then
+		local guid = uuid()
+		TremorWatchMainFrame.GUID = guid
+		ScheduleResetCooldown(guid)
+	end
+	
+end
+
+
+function TremorWatchMainFrame:OnTremorSet(tremorGuid)
+	TremorWatchMainFrame:Show()
+	if TremorWatchSettings.DB[Keys.ShowPulses] then
+		TremorWatchMainFrame.GUID = tremorGuid
+		_wait(TremorWatchSettings.DB[Keys.Delay], ScheduleResetCooldown, tremorGuid)
+	end
+end
+
 local function COMBAT_LOG_EVENT_UNFILTERED(timestamp, eventType, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, destId)
-	if not TremorWatchMainFrame:IsScanEnabled() then return end
-	
-	local isHostile = bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE
-	if not isHostile then return end
-	
-	local tremorSpellId = 8143
-	name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(tremorSpellId)
-	
-	if destName == name then
-		if eventType == "UNIT_DIED" then
-			TremorWatchMainFrame:Hide()
-		elseif eventType == "SPELL_SUMMON" then
-			TremorWatchMainFrame:Show()
-			TremorWatchMainFrame.GUID = destGUID
-			_wait(TremorWatchSettings.Delay, ScheduleResetCooldown, destGUID)
-		end
-	end	
+	if not TremorWatchSettings.DB[Keys.TestMode] then
+		local isHostile = bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE
+		if not isHostile then return end
+		
+		local tremorSpellId = 8143
+		name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(tremorSpellId)
+		
+		if destName == name then
+			if eventType == "UNIT_DIED" then
+				TremorWatchMainFrame:Hide()
+			elseif eventType == "SPELL_SUMMON" then
+				TremorWatchMainFrame:OnTremorSet(destGUID)
+			end
+		end	
+	end
 end
 
 local function OnMouseDown(self, button)
@@ -88,7 +147,7 @@ local function Init()
 	TremorWatchMainFrame:SetFrameLevel(100)
 	TremorWatchMainFrame:SetPoint(TremorWatchSettings.Location.Point, TremorWatchSettings.Location.RelativeTo,
 	TremorWatchSettings.Location.RelativePoint, TremorWatchSettings.Location.XOfs, TremorWatchSettings.Location.YOfs)
-	TremorWatchMainFrame:SetSize(TremorWatchSettings.Size, TremorWatchSettings.Size)
+	TremorWatchMainFrame:SetSize(40, 40)
 	TremorWatchMainFrame:SetScript("OnMouseDown", OnMouseDown)
 	TremorWatchMainFrame:SetScript("OnMouseUp", OnMouseUp)
 	TremorWatchMainFrame:SetClampedToScreen(true)
@@ -101,6 +160,9 @@ local function Init()
 	TremorWatchMainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	TremorWatchMainFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	TremorWatchMainFrame.cooldown:SetReverse(false)
+	
+	TremorWatchSettings.DB[Keys.TestMode] = false
+	TremorWatchMainFrame:OnSettingsUpdated()
 end
 
 local eventHandlers =
@@ -112,10 +174,6 @@ local eventHandlers =
 TremorWatchMainFrame:RegisterEvent("VARIABLES_LOADED")
 TremorWatchMainFrame:SetScript("OnEvent", function(self, ...) eventHandlers[event](...) end)
 
-function TremorWatchMainFrame:IsLocked()
-	return not TremorWatchMainFrame:IsMouseEnabled()
-end
-
 function TremorWatchMainFrame:SetLocked(locked)
 	TremorWatchMainFrame:EnableMouse(not locked)
 	
@@ -123,15 +181,6 @@ function TremorWatchMainFrame:SetLocked(locked)
 		TremorWatchMainFrame:Hide()
 	else
 		TremorWatchMainFrame:Show()
-		ScheduleResetCooldown(-1)
+		TremorWatchMainFrame:OnTremorSet(uuid())
 	end
-end
-
-function TremorWatchMainFrame:ResizeAndSave(size)
-	TremorWatchMainFrame:SetSize(size, size)
-	TremorWatchSettings.Size = size
-end
-
-function TremorWatchMainFrame:IsScanEnabled()
-	return not TremorWatchMainFrame:IsMouseEnabled()
 end
