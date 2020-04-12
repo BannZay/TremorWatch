@@ -1,0 +1,1 @@
+TremorWatch is a World of Warcraft addon which allows you to see if enemy tremor totem exists somewhere around and delay before its next pulse
