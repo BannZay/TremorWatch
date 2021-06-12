@@ -1,11 +1,4 @@
-local Keys = 
-{
-	ShowPulses = "showPulses",
-	Size = "size",
-	Alpha = "alpha",
-	Delay = "Delay",
-	TestMode = "testMode"
-}
+local Keys = TremorWatchMainFrame.Keys
 
 local function SetOption(info, value)
 	local key = info.arg or info[#info]
@@ -17,6 +10,15 @@ local function GetOption(info)
 	local key = info.arg or info[#info]
 	return TremorWatchSettings.DB[key]
 end
+
+local iterator = 
+{
+	value = -1,
+	Next = function (self)
+		self.value = self.value + 1
+		return self.value;
+	end
+}
 
 local function BuildBlizzardOptions()
 	local options = 
@@ -34,7 +36,7 @@ local function BuildBlizzardOptions()
 		type = "toggle",
 		name = "Test mode",
 		desc = "",
-		order = 1,
+		order = iterator:Next(),
 	}
 	
 	options.args[Keys.ShowPulses] = 
@@ -42,7 +44,15 @@ local function BuildBlizzardOptions()
 		type = "toggle",
 		name = "Show pulses",
 		desc = "Show next tremor totem pulse",
-		order = 2,
+		order = iterator:Next(),
+	}
+	
+	options.args[Keys.PlaySounds] =
+	{
+		type = "toggle",
+		name = "Play sounds",
+		desc = "Play sound on totem pulse",
+		order = iterator:Next(),
 	}
 	
 	options.args[Keys.Size] = 
@@ -52,7 +62,7 @@ local function BuildBlizzardOptions()
 		min = 10,
 		max = 500,
 		step =1,
-		order = 3,
+		order = iterator:Next(),
 	}
 	
 	options.args[Keys.Alpha] = 
@@ -62,7 +72,7 @@ local function BuildBlizzardOptions()
 		min = 0,
 		max = 1,
 		step =0.05,
-		order = 4,
+		order = iterator:Next(),
 	}
 	
 	options.args[Keys.Delay] = 
@@ -72,7 +82,7 @@ local function BuildBlizzardOptions()
 		min = 0,
 		max = 2,
 		step =0.05,
-		order = 5,
+		order = iterator:Next(),
 	}
 	return options
 end

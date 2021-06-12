@@ -1,22 +1,35 @@
-local Keys = 
+TremorWatchMainFrame = CreateFrame("Frame", "TremorWatchMainFrame",UIParent)
+
+TremorWatchMainFrame.Keys = 
 {
 	ShowPulses = "showPulses",
 	Size = "size",
 	Alpha = "alpha",
 	Delay = "Delay",
-	TestMode = "testMode"
+	TestMode = "testMode",
+	PlaySounds = "playSounds"
 }
 
-TremorWatchMainFrame = CreateFrame("Frame", "TremorWatchMainFrame",UIParent)
+local Keys = TremorWatchMainFrame.Keys
+
+local function OnTremorTick()
+	if TremorWatchSettings.DB[Keys.PlaySounds] and TremorWatchMainFrame:IsVisible() then
+		PlaySoundFile("Interface\\AddOns\\TremorWatch\\Sounds\\mallet-alert.mp3")
+	end
+end
+
 TremorWatchMainFrame.cooldown = CreateFrame("Cooldown", nil, TremorWatchMainFrame, "CooldownFrameTemplate")
-TremorWatchSettings = TremorWatchSettings or { Location = {Point = "Top", RelativeTo = nil, RelativePoint = "Top", XOfs = 0, YOfs = 0}, 
-DB = 
-{
-	[Keys.ShowPulses]=true,
-	[Keys.Size]=130,
-	[Keys.Alpha]=0.8,
-	[Keys.Delay]=0
-}
+
+TremorWatchSettings = TremorWatchSettings or {
+	Location = {Point = "Top", RelativeTo = nil, RelativePoint = "Top", XOfs = 0, YOfs = 0}, 
+	DB = 
+	{
+		[Keys.ShowPulses]=true,
+		[Keys.PlaySounds]=true,
+		[Keys.Size]=130,
+		[Keys.Alpha]=0.8,
+		[Keys.Delay]=0
+	}
 }
 
 local random = math.random
@@ -73,8 +86,10 @@ local function SetVisibility(target, value)
 	end
 end
 
+
 local function ScheduleResetCooldown(guid)
 	if TremorWatchMainFrame.GUID == guid then
+		OnTremorTick()
 		TremorWatchMainFrame.cooldown:SetCooldown(GetTime() - TremorWatchSettings.DB[Keys.Delay], 3)
 		_wait(3, ScheduleResetCooldown, guid)
 	end
@@ -90,8 +105,8 @@ function TremorWatchMainFrame:OnSettingsUpdated(key)
 		TremorWatchMainFrame.cooldown:SetCooldown(0,0)
 	elseif key == Keys.Delay then
 		local guid = uuid()
-		TremorWatchMainFrame.GUID = guid
 		ScheduleResetCooldown(guid)
+		TremorWatchMainFrame.GUID = guid
 	end
 	
 end
@@ -101,7 +116,7 @@ function TremorWatchMainFrame:OnTremorSet(tremorGuid)
 	TremorWatchMainFrame:Show()
 	if TremorWatchSettings.DB[Keys.ShowPulses] then
 		TremorWatchMainFrame.GUID = tremorGuid
-		_wait(TremorWatchSettings.DB[Keys.Delay], ScheduleResetCooldown, tremorGuid)
+		ScheduleResetCooldown(tremorGuid)
 	end
 end
 
