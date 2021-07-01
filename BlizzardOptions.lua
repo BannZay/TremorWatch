@@ -55,6 +55,14 @@ local function BuildBlizzardOptions()
 		order = iterator:Next(),
 	}
 	
+	options.args[Keys.ArenaOnly] = 
+	{
+		type = "toggle",
+		name = "Show on arena only",
+		desc = "Show on arena only",
+		order = iterator:Next(),
+	}
+	
 	options.args[Keys.Size] = 
 	{
 		type = "range",
@@ -84,6 +92,7 @@ local function BuildBlizzardOptions()
 		step =0.05,
 		order = iterator:Next(),
 	}
+	
 	return options
 end
 

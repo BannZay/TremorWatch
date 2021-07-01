@@ -7,7 +7,8 @@ TremorWatchMainFrame.Keys =
 	Alpha = "alpha",
 	Delay = "Delay",
 	TestMode = "testMode",
-	PlaySounds = "playSounds"
+	PlaySounds = "playSounds",
+	ArenaOnly = "arenaOnly"
 }
 
 local Keys = TremorWatchMainFrame.Keys
@@ -113,6 +114,13 @@ end
 
 
 function TremorWatchMainFrame:OnTremorSet(tremorGuid)
+	if TremorWatchSettings.DB[Keys.ArenaOnly] then
+		local type = select(2, IsInInstance())
+		if (type ~= "arena") then
+			return
+		end
+	end
+
 	TremorWatchMainFrame:Show()
 	if TremorWatchSettings.DB[Keys.ShowPulses] then
 		TremorWatchMainFrame.GUID = tremorGuid
