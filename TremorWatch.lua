@@ -129,21 +129,18 @@ function TremorWatchMainFrame:OnTremorSet(tremorGuid)
 end
 
 local function COMBAT_LOG_EVENT_UNFILTERED(timestamp, eventType, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, destId)
-	if not TremorWatchSettings.DB[Keys.TestMode] then
-		local isHostile = bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE
-		if not isHostile then return end
-		
-		local tremorSpellId = 8143
-		name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(tremorSpellId)
-		
-		if destName == name then
-			if eventType == "UNIT_DIED" then
-				TremorWatchMainFrame:Hide()
-			elseif eventType == "SPELL_SUMMON" then
-				TremorWatchMainFrame:OnTremorSet(destGUID)
-			end
-		end	
-	end
+    if not TremorWatchSettings.DB[Keys.TestMode] then
+        local isHostile = bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE
+        
+        if eventType == "SPELL_SUMMON" and destId == 8143 then
+            if not isHostile then return end
+            TremorWatchMainFrame:OnTremorSet(destGUID)
+            
+        elseif eventType == "UNIT_DIED" and TremorWatchMainFrame.GUID == destGUID then
+            TremorWatchMainFrame:Hide()
+            TremorWatchMainFrame.GUID = nil
+        end
+    end
 end
 
 local function OnMouseDown(self, button)
