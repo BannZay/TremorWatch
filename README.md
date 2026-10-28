@@ -3,6 +3,8 @@
 World of Warcraft 3.3.5a addon. Shows an icon when an enemy Tremor Totem is nearby, with a swirl and a countdown to
 its next pulse and an optional sound on each pulse.
 
+Source code and issues: https://github.com/BannZay/TremorWatch
+
 ## Screenshots
 
 ![Enemy Tremor Totem with countdown](screenshots/single-totem.png)

@@ -70,17 +70,10 @@ need an entry in `defaults`. Options: main panel plus "Enemy totems" / "Allied t
 - Only the Ace libs the options panel needs are bundled (AceConfig, AceGUI, CallbackHandler, LibStub,
   LibSharedMedia + its AceGUI widgets); the addon itself is a plain frame, not AceAddon.
 
-## Testing
-
-In-game tests: `Unit_Tests_TremorWatch` in the Trinity client's AddOns folder (not in this repo); run with the
-`wow-ui-tests` skill, `-Filter TremorWatch`. Most tests drive `frame.Internal` with a fake clock and fake combat-log
-events; one test has a real hostile NPC (entry 87) summon a totem on the server.
-Check WoW API behaviour against `D:\Repositories\wowdecomp` rather than memory. Ask before any UI test.
-
 ## Release
 
 `tools/release.ps1` builds `dist/TremorWatch-<version>.zip`. Checklist, packaging and the README screenshots (`screenshots/`,
-taken by `Unit_Tests_TremorWatchShots` in the Trinity client): `wow-addon-release` skill.
+taken by a separate test addon in a private test client): `wow-addon-release` skill (maintainer-local).
 
 ## Conventions
 
