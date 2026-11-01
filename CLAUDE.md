@@ -7,7 +7,7 @@ Author: BannZay.
 ## Files
 
 - `TremorWatch.toc` – load order (version 2.0, MIT, see `LICENSE`), `SavedVariables: TremorWatchSettings, TremorWatchProfiles`. Libs are bundled and required (no lib-strip markers, no packager config).
-- Runtime code is split into files that share a private table `ns` (`local _, ns = ...`); each file copies what it needs
+- Runtime code lives in `src/` (the files below; `Sounds/`, `libs/` stay at the addon root) and is split into files that share a private table `ns` (`local _, ns = ...`); each file copies what it needs
   into locals at its top and exports with `ns.X = X` at its end. Load order (see the toc), each only uses earlier ones:
   - `Core.lua` – constants, `Keys`, the two sides (`ENEMY`/`ALLY`, also `frame.Sides.enemy/.ally`: frame, `slots` (one icon
     per shown totem, up to 3, oldest first; slot 1 is the frame itself and the drag handle; also `frame.Slots`), settings
@@ -21,7 +21,7 @@ Author: BannZay.
   - `Settings.lua` – `ApplyTestMode/Lock/Location/Look`, `OnSettingsUpdated`, drag/save position, `CopyDefaults`.
   - `Profiles.lua` – `NormalizeSettings`, profile API, `ns.InitProfiles`.
   - `Main.lua` – `Init` (on PLAYER_LOGIN), event handler, `/tw` slash commands.
-- `BlizzardOptions.lua` – AceConfig options table registered in the Interface Options panel (`Keys` come from
+- `src/BlizzardOptions.lua` – AceConfig options table registered in the Interface Options panel (`Keys` come from
   `TremorWatchMainFrame.Keys`; all options read/write `TremorWatchSettings.DB[key]`).
 - `Sounds/mallet-alert.mp3` – default pulse sound; the other `Sounds/*.wav` are synthesized by `tools/gen_sounds.py` and
   registered in LibSharedMedia at load. `libs/` – bundled Ace3 / LibSharedMedia (third-party, do not edit).
@@ -70,11 +70,7 @@ need an entry in `defaults`. Options: main panel plus "Enemy totems" / "Allied t
 - Only the Ace libs the options panel needs are bundled (AceConfig, AceGUI, CallbackHandler, LibStub,
   LibSharedMedia + its AceGUI widgets); the addon itself is a plain frame, not AceAddon.
 
-## Release
-
-`tools/release.ps1` builds `dist/TremorWatch-<version>.zip`. Checklist, packaging and the README screenshots (`screenshots/`,
-taken by a separate test addon in a private test client): `wow-addon-release` skill (maintainer-local).
-
 ## Conventions
 
 Tabs for indentation, PascalCase for functions/keys, Lua 5.1 only (no `goto`, no `//`). Keep new variables `local`.
+Only use WoW API that exists in 3.3.5a (no `frame:SetShown`, `C_Timer`, `GetNumGroupMembers`, ...).

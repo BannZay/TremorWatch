@@ -6,6 +6,7 @@
 ## DefaultState: Enabled
 ## SavedVariables: TremorWatchSettings, TremorWatchProfiles
 ## X-License: MIT
+## X-Website: https://github.com/BannZay/TremorWatch
 ## X-Category: PvP
 
 libs\LibStub\LibStub.lua
@@ -15,11 +16,11 @@ libs\AceConfig-3.0\AceConfig-3.0.xml
 libs\LibSharedMedia-3.0\lib.xml
 libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
-Core.lua
-Sounds.lua
-Highlight.lua
-Totems.lua
-Settings.lua
-Profiles.lua
-Main.lua
-BlizzardOptions.lua
+src\Core.lua
+src\Sounds.lua
+src\Highlight.lua
+src\Totems.lua
+src\Settings.lua
+src\Profiles.lua
+src\Main.lua
+src\BlizzardOptions.lua
