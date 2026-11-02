@@ -19,6 +19,9 @@ Author: BannZay.
     nextSound}` (the pulse schedule lives per totem), `Update()` (`UpdateSide` per side), `Resync`, the `timer` frame whose
     OnUpdate is `Tick`, add/destroy/expire, `OnCombatLog`, `UpdateRegistration`.
   - `Settings.lua` – `ApplyTestMode/Lock/Location/Look`, `OnSettingsUpdated`, drag/save position, `CopyDefaults`.
+  - `Nameplates.lua` – overlay on Tremor Totem nameplates (big icon, glow, swirl, countdown, pulse flash); own
+    OnUpdate driver, scans `WorldFrame` children every 0.1 s; hooks `OnSettingsUpdated` to re-apply its look.
+    Test hooks in `internal.Nameplates`.
   - `Profiles.lua` – `NormalizeSettings`, profile API, `ns.InitProfiles`.
   - `Main.lua` – `Init` (on PLAYER_LOGIN), event handler, `/tw` slash commands.
 - `src/BlizzardOptions.lua` – AceConfig options table registered in the Interface Options panel (`Keys` come from
@@ -36,7 +39,7 @@ DeleteProfile/ResetProfile`; the options live in the "Profiles" sub-panel. A pro
 `{ Location, LocationAlly = {Point, RelativeTo (frame name string), RelativePoint, XOfs, YOfs},
 DB = {...} }`. Shared DB keys: `arenaOnly`, `locked`, `latency`, `staleTimeout`.
 Per-kind keys exist twice and are reached through the side's fields (`Track`, `Size`, `Alpha`, `MaxIcons`,
-`IconSpacing`, `ShowPulses`, `Countdown`, `Sound`, `SpawnSound`, `DestroyFlash`, `DestroySoundName`, `AllowSounds`;
+`IconSpacing`, `ShowPulses`, `Countdown`, `Sound`, `SpawnSound`, `DestroyFlash`, `DestroySoundName`, `AllowSounds`, `ShowIcon` (off: the frame stays hidden, totems are still tracked);
 `Tint`; enemy also `Highlight`). Enemy keys are the original ones (`trackEnemies`, `size`, `showPulses`, ...),
 ally keys are `trackAllies` and `ally`-prefixed (`allySize`, `allyShowPulses`, ...). Key names live in `Keys`. Defaults
 are merged into the saved table in `Init` (saved variables replace anything assigned at file load), so new keys only
@@ -67,6 +70,26 @@ need an entry in `defaults`. Options: main panel plus "Enemy totems" / "Allied t
   range is unknown.
 - The client logs a totem's death (UNIT_DIED / UNIT_DESTROYED) only while the totem is in view; owner death and the
   stale timeout cover the rest. With "arena only" the combat log is only registered inside arenas.
+- Nameplates (`Nameplates.lua`): settings are per side (side fields `PlateIcon`, `PlateStyle`, ..., `PlateRecolor`,
+  `PlateBarColor`; enemy keys `plate*`, ally keys `allyPlate*`; "Nameplate" group of each side's options panel,
+  `PlateOptions`); a hostile (red) plate uses the enemy settings, any other the ally ones; nothing is done for an untracked side (`side.Track`). A reused plate whose side
+  changes gets its look re-applied (`overlay.side`). Nameplates are protected frames whose click
+  area is their own rectangle (client resets the size whenever a plate is given to a unit), so the overlay is a
+  separate mouse-disabled child centred on the plate, never a resize of the plate. Plates are found by layout
+  (unnamed WorldFrame child, region 7 a FontString = name, first child a StatusBar = health bar; region 6 = mouseover
+  glow), matched by name (`ns.tremorName`), hostile = red health bar. Plates have no GUID: one is learned while the
+  plate is the target (only plate at alpha 1) or under the mouse, and cleared when the plate hides; otherwise a plate
+  takes the only tracked totem of its side, decided by group membership of the owner (not combat log reaction flags,
+  which follow faction and call same-faction duel opponents friendly). Obeys "arena only". `/tw plates` prints what
+  the scan sees. Two styles (`plateStyle`): "square" (main-frame icon + swirl) and "round" (portrait icon,
+  `images/RoundBorder.tga` border and tinted ring, taken from PlatesClasses; no swirl, as the Cooldown swirl is square).
+  Health bar recolor (`plateBarRecolor`, `plateBarColor`; independent of the icon option `plateHighlight`; ally `allyPlate*` keys alike): set every frame on Tremor plates (the client may reset it);
+  the client's own color is remembered per plate (`barColor`), used for the hostile check and restored when the
+  plate hides, shows another unit or the option is off.
+  Hide name (`plateHideName`/`allyPlateHideName`): the name FontString is hidden (re-applied every frame, shown again
+  like the bar color is restored); its text stays, so plates are still matched by name.
+  Pulse counter (`plateTicks`): "swipe" (the swirl) or "rings" (`RING_LAYERS` borders in `plateRingColor` (white by default), no swirl, countdown text or round-style colored ring; round ones or four
+  WHITE8X8 edges, fading in one per slice of the interval, the outermost complete on the pulse; then the flash).
 - Only the Ace libs the options panel needs are bundled (AceConfig, AceGUI, CallbackHandler, LibStub,
   LibSharedMedia + its AceGUI widgets); the addon itself is a plain frame, not AceAddon.
 

@@ -129,68 +129,143 @@ local options =
 
 -- The enemy and allied panels hold the same settings, each with its own values: each kind of totem has its own
 -- frame, which is positioned (by unlocking) and sized separately.
+-- a color picker for a { r, g, b } setting
+local function ColorOption(key, name, order, disabled, desc)
+	return { type = "color", name = name, order = order, desc = desc, disabled = disabled,
+		get = function()
+			local c = TremorWatchSettings.DB[key]
+			return c.r, c.g, c.b
+		end,
+		set = function(_, r, g, b)
+			TremorWatchSettings.DB[key] = { r = r, g = g, b = b }
+			TremorWatchMainFrame:OnSettingsUpdated(key)
+		end }
+end
+
+-- the side's Tremor Totem nameplates: a health bar color, and an icon with the pulse counter on them; all off while
+-- the side is not tracked
+local function PlateOptions(side, who)
+	local icon, track = side.PlateIcon, side.Track
+	local IconOff = Disabled(track, icon)
+	local function NoPulseTicks()
+		local db = TremorWatchSettings.DB
+		return IconOff() or not db[side.PlateCountdown]
+	end
+	return
+	{
+		type = "group", inline = true, name = "Nameplate", order = 6,
+		args =
+		{
+			[side.PlateRecolor] = { type = "toggle", name = "Recolor Nameplate", order = 1,
+				desc = "Paint the health bar of " .. who .. " Tremor Totem nameplates (works without the icon too)",
+				disabled = Disabled(track) },
+			[side.PlateBarColor] = ColorOption(side.PlateBarColor, "Health bar color", 2, Disabled(track, side.PlateRecolor)),
+			[side.PlateHideName] = { type = "toggle", name = "Hide name", order = 2.2,
+				desc = "Hide the name text on " .. who .. " Tremor Totem nameplates",
+				disabled = Disabled(track) },
+			iconHeader = { type = "header", name = "Icon", order = 2.5 },
+			[icon] = { type = "toggle", name = "Add Icon", order = 3, width = "full",
+				desc = "A large Tremor icon on the totem's nameplate. It does not take the mouse: hovering or clicking it reaches the nameplate, so a mouseover macro works on it",
+				disabled = Disabled(track) },
+			[side.PlateStyle] = { type = "select", name = "Style", order = 4, style = "dropdown",
+				values = { square = "Square, with swirl", round = "Round, with ring" },
+				desc = "Square looks like the TremorWatch frame and shows the pulse swirl; round has a colored ring and no swirl",
+				disabled = IconOff },
+			[side.PlateSize] = { type = "range", name = "Icon size", min = 16, max = 128, step = 1, order = 5,
+				disabled = IconOff },
+			[side.PlateOffsetY] = { type = "range", name = "Vertical offset", softMin = -60, softMax = 60, step = 1, order = 6,
+				desc = "Keep it near 0 so the icon stays over the nameplate's click area",
+				disabled = IconOff },
+			[side.PlateGlow] = { type = "toggle", name = "Pulsing glow", order = 7, disabled = IconOff },
+			[side.PlateColor] = ColorOption(side.PlateColor, "Glow color", 8, IconOff,
+				"Color of the glow and of the round style's ring"),
+			pulseHeader = { type = "header", name = "Pulse counter", order = 10 },
+			[side.PlateCountdown] = { type = "toggle", name = "Pulse ticks", order = 11, width = "full",
+				desc = "Count down to the next pulse on the icon, and flash when it pulses. Needs the totem's summon in the combat log; a plate gets no countdown while several totems of its side can not be told apart (targeting or hovering one tells them apart).",
+				disabled = IconOff },
+			[side.PlateTicks] = { type = "select", name = "Counter", order = 12, style = "dropdown",
+				values = { swipe = "Swipe", rings = "Growing border" },
+				desc = "Swipe: the cooldown swirl and countdown text over the icon (swirl in the square style only). Growing border: borders appear one by one around the icon as the pulse comes closer, then the pulse flashes",
+				disabled = NoPulseTicks },
+			[side.PlateRingColor] = ColorOption(side.PlateRingColor, "Border color", 13,
+				function() return NoPulseTicks() or TremorWatchSettings.DB[side.PlateTicks] ~= "rings" end,
+				"Color of the growing border"),
+		},
+	}
+end
+
 local function SideOptions(side, title, enemy)
 	local track = side.Track
 	local who = enemy and "enemy" or "allied"
-	local pulses =
+	-- every sound of the side: spawn and destroyed, then the pulse sounds under their own header
+	local sound =
 	{
-		[side.ShowPulses] = { type = "toggle", name = "Show pulses", order = 1,
-			desc = "Swirl counting down to the next pulse", disabled = Disabled(track) },
-		[side.Countdown] = { type = "toggle", name = "Countdown text", order = 2,
-			desc = "Seconds to the next pulse on the icon", disabled = Disabled(track) },
+		[side.AllowSounds] = { type = "toggle", name = "Enable", order = 0, width = "full",
+			disabled = Disabled(track),
+			desc = "Off silences everything on this frame: spawn, pulse and destroyed sounds, whatever their own settings" },
+		pulseHeader = { type = "header", name = "Pulses", order = 1.9 },
 	}
-	AddSoundSelect(pulses, side.Sound, "Pulse sound", 3, track, side.AllowSounds)
+	AddSoundSelect(sound, side.SpawnSound, "Spawn sound", 1, track, side.AllowSounds)
+	AddSoundSelect(sound, side.DestroySoundName, "Destroyed sound", 1.5, track, side.AllowSounds)
 	local function NotSwell() return TremorWatchSettings.DB[side.SoundMode] ~= "swell" end
 	local function Swell() return TremorWatchSettings.DB[side.SoundMode] == "swell" end
-	if pulses[side.Sound] then pulses[side.Sound].hidden = Swell end
-	pulses[side.SoundMode] = { type = "select", name = "Sound mode", order = 2.5, width = "full", style = "dropdown",
+	sound[side.SoundMode] = { type = "select", name = "Sound mode", order = 2, width = "full", style = "dropdown",
 		values = { simple = "Simple", swell = "Swell" },
 		desc = "Simple: the pulse sound plays on each pulse. Swell: a rising run of short sounds in the second before each pulse, "
 			.. "peaking on it; it stops at once when the totem is destroyed",
 		disabled = Disabled(track, nil, side.AllowSounds) }
-	pulses[side.SwellPreset] = { type = "select", name = "Swell sound", order = 3, width = "full", style = "dropdown",
+	AddSoundSelect(sound, side.Sound, "Pulse sound", 3, track, side.AllowSounds)
+	if sound[side.Sound] then sound[side.Sound].hidden = Swell end
+	sound[side.SwellPreset] = { type = "select", name = "Swell sound", order = 3, width = "full", style = "dropdown",
 		values = SwellValues, hidden = NotSwell, disabled = Disabled(track, nil, side.AllowSounds) }
-	pulses[side.SwellLength] = { type = "range", name = "Swell length", order = 3.2, width = "full",
+	sound[side.SwellLength] = { type = "range", name = "Swell length", order = 3.2, width = "full",
 		min = TremorWatchMainFrame.SwellStep, max = TremorWatchMainFrame.MaxSwellLength, step = TremorWatchMainFrame.SwellStep,
 		hidden = NotSwell, disabled = Disabled(track, nil, side.AllowSounds),
 		desc = "How many seconds before each pulse the swell starts (up to the whole 3 s between pulses). "
 			.. "A shorter swell starts higher and louder; it always ends on the pulse" }
-	pulses.previewSwell = { type = "execute", name = "Preview swell", order = 3.5, hidden = NotSwell,
+	sound.previewSwell = { type = "execute", name = "Preview swell", order = 3.5, hidden = NotSwell,
 		func = function() TremorWatchMainFrame:PreviewSwell(side) end,
 		disabled = Disabled(track, nil, side.AllowSounds) }
 	if enemy then
-		pulses.previewAlert = { type = "execute", name = "Preview alert", order = 3.6, hidden = NotSwell,
+		sound.previewAlert = { type = "execute", name = "Preview alert", order = 3.6, hidden = NotSwell,
 			desc = "The louder swell played while an enemy has a fear, charm or sleep effect the next pulse will remove",
 			func = function() TremorWatchMainFrame:PreviewSwell(side, true) end,
 			disabled = Disabled(track, nil, side.AllowSounds) }
 	end
+
 	local frame =
 	{
 		[side.MaxIcons] = { type = "range", name = "Max icons", min = 1, max = 3, step = 1, order = 1,
-			disabled = Disabled(track),
 			desc = "Totems shown at once, each with its own icon; more are counted as +N on the last icon" },
-		[side.IconSpacing] = { type = "range", name = "Icon spacing", min = 0, max = 50, step = 1, order = 2,
-			disabled = Disabled(track) },
-		[side.Size] = { type = "range", name = "Icon size", min = 10, max = 500, step = 1, order = 3,
-			disabled = Disabled(track) },
-		[side.Alpha] = { type = "range", name = "Alpha", min = 0.05, max = 1, step = 0.05, order = 4,
-			disabled = Disabled(track) },
+		[side.IconSpacing] = { type = "range", name = "Icon spacing", min = 0, max = 50, step = 1, order = 2 },
+		[side.Size] = { type = "range", name = "Icon size", min = 10, max = 500, step = 1, order = 3 },
+		[side.Alpha] = { type = "range", name = "Alpha", min = 0.05, max = 1, step = 0.05, order = 4 },
 	}
-	local spawn = {}
-	AddSoundSelect(spawn, side.SpawnSound, "Spawn sound", 1, track, side.AllowSounds)
-	local destroyed =
+
+	-- what the icon shows
+	local icon =
 	{
-		[side.DestroyFlash] = { type = "toggle", name = "Flash", order = 1, disabled = Disabled(track),
+		[side.ShowPulses] = { type = "toggle", name = "Show pulses", order = 2,
+			desc = "Swirl counting down to the next pulse" },
+		[side.Countdown] = { type = "toggle", name = "Countdown text", order = 3,
+			desc = "Seconds to the next pulse on the icon" },
+		[side.DestroyFlash] = { type = "toggle", name = "Flash", order = 5,
 			desc = "Show a grey icon for a moment when the totem is destroyed" },
+		[side.Tint] = { type = "toggle", name = "Tint", order = 6,
+			desc = "Color the icon of " .. who .. " totems " .. (enemy and "red" or "green") },
 	}
-	AddSoundSelect(destroyed, side.DestroySoundName, "Destroyed sound", 2, track, side.AllowSounds)
 	if enemy then
-		pulses[side.Highlight] = { type = "toggle", name = "Highlight removals", order = 0,
-			desc = "Glow while an enemy has a fear, charm or sleep effect the next pulse will remove",
-			disabled = Disabled(track) }
+		icon[side.Highlight] = { type = "toggle", name = "Highlight removals", order = 4,
+			desc = "Glow while an enemy has a fear, charm or sleep effect the next pulse will remove" }
 	end
-	frame[side.Tint] = { type = "toggle", name = "Tint icon", order = 5,
-		desc = "Color the icon of " .. who .. " totems " .. (enemy and "red" or "green"), disabled = Disabled(track) }
+	-- the frame and icon settings only matter while the icon is shown
+	for _, options in ipairs({ frame, icon }) do
+		for _, option in pairs(options) do option.disabled = Disabled(track, side.ShowIcon) end
+	end
+	icon[side.ShowIcon] = { type = "toggle", name = "Show", order = 1, width = "full",
+		disabled = Disabled(track),
+		desc = "Off hides this frame's icons; the totems are still tracked for sounds and nameplates" }
+
 	return
 	{
 		type = "group",
@@ -201,34 +276,10 @@ local function SideOptions(side, title, enemy)
 		{
 			[track] = { type = "toggle", name = "Track " .. who .. " totems", order = 1, width = "full",
 				desc = "Show tremor totems of " .. (enemy and "enemies" or "allies") },
-			[side.AllowSounds] = { type = "toggle", name = "Allow sounds", order = 1.5, width = "full",
-				disabled = Disabled(track),
-				desc = "Off silences everything on this frame: pulse and destroyed sounds, whatever their own settings" },
-			display =
-			{
-				type = "group",
-				inline = true,
-				name = "Frame",
-				order = 2,
-				args = frame,
-			},
-			spawn =
-			{
-				type = "group",
-				inline = true,
-				name = "Totem spawn",
-				order = 3,
-				args = spawn,
-			},
-			pulses = { type = "group", inline = true, name = "Pulses", order = 4, args = pulses },
-			destroy =
-			{
-				type = "group",
-				inline = true,
-				name = "Totem destroyed",
-				order = 5,
-				args = destroyed,
-			},
+			display = { type = "group", inline = true, name = "Frame", order = 2, args = frame },
+			icon = { type = "group", inline = true, name = "Icon", order = 3, args = icon },
+			sound = { type = "group", inline = true, name = "Sound", order = 4, args = sound },
+			nameplate = PlateOptions(side, who),
 		},
 	}
 end

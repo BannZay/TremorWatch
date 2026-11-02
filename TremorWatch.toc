@@ -21,6 +21,7 @@ src\Sounds.lua
 src\Highlight.lua
 src\Totems.lua
 src\Settings.lua
+src\Nameplates.lua
 src\Profiles.lua
 src\Main.lua
 src\BlizzardOptions.lua

@@ -69,6 +69,8 @@ SlashCmdList["TREMORWATCH"] = function(msg)
 		end
 		frame:OnSettingsUpdated(Keys.Locked)
 		NotifyOptions()
+	elseif msg == "plates" then
+		for _, line in ipairs(frame.Internal.Nameplates.Report()) do print("TremorWatch: " .. line) end
 	elseif msg == "reset" then
 		frame:ResetLocation()
 	elseif strsub(msg, 1, 8) == "profile " then

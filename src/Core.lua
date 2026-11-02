@@ -49,6 +49,8 @@ frame.Keys =
 	AllySpawnSound = "allySpawnSound",
 	AllowSounds = "allowSounds",
 	AllyAllowSounds = "allyAllowSounds",
+	ShowIcon = "showIcon",
+	AllyShowIcon = "allyShowIcon",
 	AllySize = "allySize",
 	AllyAlpha = "allyAlpha",
 	AllyMaxIcons = "allyMaxIcons",
@@ -62,7 +64,31 @@ frame.Keys =
 	AllySwellPreset = "allySwellPreset",
 	AllySwellLength = "allySwellLength",
 	AllyDestroyFlash = "allyDestroyFlash",
-	AllyDestroySoundName = "allyDestroySoundName"
+	AllyDestroySoundName = "allyDestroySoundName",
+	PlateHighlight = "plateHighlight",
+	PlateSize = "plateSize",
+	PlateOffsetY = "plateOffsetY",
+	PlateGlow = "plateGlow",
+	PlateColor = "plateColor",
+	PlateCountdown = "plateCountdown",
+	PlateStyle = "plateStyle",
+	PlateTicks = "plateTicks",
+	PlateRingColor = "plateRingColor",
+	PlateBarRecolor = "plateBarRecolor",
+	PlateBarColor = "plateBarColor",
+	PlateHideName = "plateHideName",
+	AllyPlateHideName = "allyPlateHideName",
+	AllyPlateHighlight = "allyPlateHighlight",
+	AllyPlateSize = "allyPlateSize",
+	AllyPlateOffsetY = "allyPlateOffsetY",
+	AllyPlateGlow = "allyPlateGlow",
+	AllyPlateColor = "allyPlateColor",
+	AllyPlateCountdown = "allyPlateCountdown",
+	AllyPlateStyle = "allyPlateStyle",
+	AllyPlateTicks = "allyPlateTicks",
+	AllyPlateRingColor = "allyPlateRingColor",
+	AllyPlateBarRecolor = "allyPlateBarRecolor",
+	AllyPlateBarColor = "allyPlateBarColor"
 }
 
 local Keys = frame.Keys
@@ -73,19 +99,27 @@ local Keys = frame.Keys
 local ENEMY =
 {
 	friendly = false, frame = frame, Location = "Location", testGUID = "TremorWatch-test",
-	Track = Keys.TrackEnemies, AllowSounds = Keys.AllowSounds, Size = Keys.Size, Alpha = Keys.Alpha, MaxIcons = Keys.MaxIcons,
+	Track = Keys.TrackEnemies, ShowIcon = Keys.ShowIcon, AllowSounds = Keys.AllowSounds, Size = Keys.Size, Alpha = Keys.Alpha, MaxIcons = Keys.MaxIcons,
 	IconSpacing = Keys.IconSpacing, ShowPulses = Keys.ShowPulses, Countdown = Keys.Countdown,
 	Sound = Keys.Sound, SoundMode = Keys.SoundMode, SwellPreset = Keys.SwellPreset, SwellLength = Keys.SwellLength, SpawnSound = Keys.SpawnSound, DestroyFlash = Keys.DestroyFlash,
 	DestroySoundName = Keys.DestroySoundName, Highlight = Keys.Highlight,
-	Tint = Keys.Tint, TintColor = {1, 0.6, 0.6}
+	Tint = Keys.Tint, TintColor = {1, 0.6, 0.6},
+	PlateIcon = Keys.PlateHighlight, PlateSize = Keys.PlateSize, PlateOffsetY = Keys.PlateOffsetY, PlateGlow = Keys.PlateGlow,
+	PlateColor = Keys.PlateColor, PlateCountdown = Keys.PlateCountdown, PlateStyle = Keys.PlateStyle,
+	PlateTicks = Keys.PlateTicks, PlateRingColor = Keys.PlateRingColor, PlateRecolor = Keys.PlateBarRecolor,
+	PlateBarColor = Keys.PlateBarColor, PlateHideName = Keys.PlateHideName
 }
 local ALLY =
 {
 	friendly = true, frame = allyFrame, Location = "LocationAlly", testGUID = "TremorWatch-test-ally",
-	Track = Keys.TrackAllies, AllowSounds = Keys.AllyAllowSounds, Size = Keys.AllySize, Alpha = Keys.AllyAlpha, MaxIcons = Keys.AllyMaxIcons,
+	Track = Keys.TrackAllies, ShowIcon = Keys.AllyShowIcon, AllowSounds = Keys.AllyAllowSounds, Size = Keys.AllySize, Alpha = Keys.AllyAlpha, MaxIcons = Keys.AllyMaxIcons,
 	IconSpacing = Keys.AllyIconSpacing, ShowPulses = Keys.AllyShowPulses, Countdown = Keys.AllyCountdown,
 	Sound = Keys.AllySound, SoundMode = Keys.AllySoundMode, SwellPreset = Keys.AllySwellPreset, SwellLength = Keys.AllySwellLength, SpawnSound = Keys.AllySpawnSound, DestroyFlash = Keys.AllyDestroyFlash,
-	DestroySoundName = Keys.AllyDestroySoundName, Tint = Keys.AllyTint, TintColor = {0.6, 1, 0.6}
+	DestroySoundName = Keys.AllyDestroySoundName, Tint = Keys.AllyTint, TintColor = {0.6, 1, 0.6},
+	PlateIcon = Keys.AllyPlateHighlight, PlateSize = Keys.AllyPlateSize, PlateOffsetY = Keys.AllyPlateOffsetY,
+	PlateGlow = Keys.AllyPlateGlow, PlateColor = Keys.AllyPlateColor, PlateCountdown = Keys.AllyPlateCountdown,
+	PlateStyle = Keys.AllyPlateStyle, PlateTicks = Keys.AllyPlateTicks, PlateRingColor = Keys.AllyPlateRingColor,
+	PlateRecolor = Keys.AllyPlateBarRecolor, PlateBarColor = Keys.AllyPlateBarColor, PlateHideName = Keys.AllyPlateHideName
 }
 local SIDES = { ENEMY, ALLY }
 frame.Sides = { enemy = ENEMY, ally = ALLY }
@@ -118,6 +152,7 @@ local defaults =
 		[Keys.StaleTimeout] = 60,
 
 		[Keys.TrackEnemies] = true,
+		[Keys.ShowIcon] = true,
 		[Keys.AllowSounds] = true,
 		[Keys.Size] = 90,
 		[Keys.Alpha] = 0.8,
@@ -131,11 +166,12 @@ local defaults =
 		[Keys.SwellLength] = 3,
 		[Keys.SpawnSound] = NO_SOUND,
 		[Keys.Highlight] = true,
-		[Keys.Tint] = false,
+		[Keys.Tint] = true,
 		[Keys.DestroyFlash] = true,
 		[Keys.DestroySoundName] = "shatter - TremorWatch",
 
 		[Keys.TrackAllies] = false,
+		[Keys.AllyShowIcon] = true,
 		[Keys.AllyAllowSounds] = false,
 		[Keys.AllySize] = 90,
 		[Keys.AllyAlpha] = 0.8,
@@ -150,7 +186,33 @@ local defaults =
 		[Keys.AllySwellLength] = 1.2,
 		[Keys.AllySpawnSound] = "Friendly tremor up (fast) - TremorWatch",
 		[Keys.AllyDestroyFlash] = true,
-		[Keys.AllyDestroySoundName] = "Friendly tremor down (fast) - TremorWatch"
+		[Keys.AllyDestroySoundName] = "Friendly tremor down (fast) - TremorWatch",
+
+		[Keys.PlateHighlight] = true,
+		[Keys.PlateSize] = 30,
+		[Keys.PlateOffsetY] = -5,
+		[Keys.PlateGlow] = true,
+		[Keys.PlateColor] = { r = 1, g = 0, b = 1 },
+		[Keys.PlateCountdown] = true,
+		[Keys.PlateStyle] = "square",
+		[Keys.PlateTicks] = "rings",
+		[Keys.PlateRingColor] = { r = 1, g = 1, b = 1 },
+		[Keys.PlateBarRecolor] = true,
+		[Keys.PlateBarColor] = { r = 0, g = 1, b = 1 },
+		[Keys.PlateHideName] = false,
+
+		[Keys.AllyPlateHighlight] = false,
+		[Keys.AllyPlateSize] = 40,
+		[Keys.AllyPlateOffsetY] = 0,
+		[Keys.AllyPlateGlow] = true,
+		[Keys.AllyPlateColor] = { r = 0, g = 1, b = 0 },
+		[Keys.AllyPlateCountdown] = true,
+		[Keys.AllyPlateStyle] = "square",
+		[Keys.AllyPlateTicks] = "swipe",
+		[Keys.AllyPlateRingColor] = { r = 1, g = 1, b = 1 },
+		[Keys.AllyPlateBarRecolor] = false,
+		[Keys.AllyPlateBarColor] = { r = 0, g = 1, b = 0 },
+		[Keys.AllyPlateHideName] = false
 	}
 }
 

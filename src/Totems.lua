@@ -139,8 +139,9 @@ local function UpdateSide(side, now, arenaOk, forceResync)
 			if totem then slot.host:Show() else slot.host:Hide() end
 		end
 	end
+	-- with the icon off the totems are still tracked (sounds, nameplates), only the frame stays hidden
 	local active = total > 0 or side.flashUntil
-	if active then
+	if active and db[side.ShowIcon] then
 		side.frame:Show()
 	else
 		side.frame:Hide()

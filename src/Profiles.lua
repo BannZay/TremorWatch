@@ -58,6 +58,7 @@ local function NormalizeSettings(settings)
 	end
 	settings.DB.testMode = nil -- merged into the lock
 	settings.DB.fearOnly = nil -- replaced by the highlight
+	settings.DB.plateHostileOnly = nil -- replaced by per-side nameplate settings (pre-release)
 	for _, side in ipairs(SIDES) do
 		local loc = settings[side.Location]
 		if type(loc.RelativeTo) ~= "string" then loc.RelativeTo = "UIParent" end
