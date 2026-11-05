@@ -284,7 +284,7 @@ local function ApplyLook(overlay, plate, db)
 	local color = db[side.PlateColor]
 	overlay:SetSize(size, size)
 	overlay:ClearAllPoints()
-	overlay:SetPoint("CENTER", plate, "CENTER", 0, db[side.PlateOffsetY])
+	overlay:SetPoint("CENTER", plate, "CENTER", db[side.PlateOffsetX] or 0, db[side.PlateOffsetY])
 	local round = db[side.PlateStyle] == "round"
 	overlay.round = round
 	for _, part in ipairs({ overlay.ring, overlay.roundIcon, overlay.roundBorder }) do
