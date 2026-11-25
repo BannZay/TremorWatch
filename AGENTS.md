@@ -4,6 +4,8 @@ WoW 3.3.5a (Interface 30300) addon. Detects an enemy Tremor Totem (hostile `SPEL
 log), shows its icon with a 3 s cooldown swirl and countdown for the next pulse, and optionally plays a sound on each pulse.
 Author: BannZay.
 
+@AGENTS.local.md
+
 ## Files
 
 - `TremorWatch.toc` – load order (version 2.0, MIT, see `LICENSE`), `SavedVariables: TremorWatchSettings, TremorWatchProfiles`. Libs are bundled and required (no lib-strip markers, no packager config).
